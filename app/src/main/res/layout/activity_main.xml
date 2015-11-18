@@ -1,4 +1,5 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/LinearLayout1"
     android:layout_width="match_parent"
@@ -17,7 +18,9 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="300dp"
+        android:rowCount="3"
+        android:columnCount="2"
         android:orientation="vertical"
         android:padding="10dp" >
 
@@ -26,29 +29,57 @@
             android:layout_width="200dp"
             android:layout_height="300dp"
             android:layout_gravity="center"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
             android:background="#ff3cff29"/>
-
+    </LinearLayout>
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="177dp"
+        android:columnCount="2"
+        android:rowCount="5">
         <Button
             android:id="@+id/cameraBtn"
             android:layout_width="150dp"
             android:layout_height="50dp"
             android:text="New Photo"
-            android:layout_gravity="center_horizontal" />
+            android:layout_row="0"
+            android:layout_column="0" />
 
         <Button
             android:id="@+id/chooseBtn"
             android:layout_width="150dp"
             android:layout_height="50dp"
             android:text="Choose Photo"
-            android:layout_gravity="center_horizontal" />
+            android:layout_gravity="right"
+            android:layout_row="0"
+            android:layout_column="1" />
 
         <Button
             android:id="@+id/saveBtn"
             android:layout_width="150dp"
             android:layout_height="50dp"
             android:text="Save Photo"
-            android:layout_gravity="center_horizontal" />
+            android:layout_row="1"
+            android:layout_column="0" />
 
-    </LinearLayout>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Network Message"
+            android:id="@+id/netBtn"
+            android:layout_gravity="right"
+            android:layout_row="1"
+            android:layout_column="1" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Network Image"
+            android:id="@+id/netImageBtn"
+            android:layout_row="3"
+            android:layout_column="0" />
+
+    </GridLayout>
 
 </LinearLayout>
