@@ -172,7 +172,7 @@ public class MainActivity extends ActionBarActivity
                 Bitmap thumbnail = (BitmapFactory.decodeFile(picturePath));
 
                 viewImage.setImageResource(0);
-                
+
                 Bitmap preview = convertToMutable(thumbnail);
                 Drawable preview2 = new BitmapDrawable(getResources(), preview);
                 viewImage.setBackground(preview2);
