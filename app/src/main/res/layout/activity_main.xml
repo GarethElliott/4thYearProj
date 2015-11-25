@@ -8,39 +8,30 @@
     android:padding="10dp"
     android:background="#ff2bc9ff">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:padding="5dp" >
-
-    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:rowCount="3"
-        android:columnCount="2"
         android:orientation="vertical"
         android:padding="10dp" >
 
         <ImageView
             android:id="@+id/viewImage"
-            android:layout_width="200dp"
-            android:layout_height="300dp"
+            android:layout_width="187dp"
+            android:layout_height="250dp"
             android:layout_gravity="center"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
-            android:background="#ff3cff29"/>
+            android:background="#ffffff"/>
     </LinearLayout>
     <GridLayout
         android:layout_width="match_parent"
         android:layout_height="177dp"
         android:columnCount="2"
-        android:rowCount="5">
+        android:rowCount="6">
         <Button
             android:id="@+id/cameraBtn"
-            android:layout_width="150dp"
+            android:layout_width="160dp"
             android:layout_height="50dp"
             android:text="New Photo"
             android:layout_row="0"
@@ -48,7 +39,7 @@
 
         <Button
             android:id="@+id/chooseBtn"
-            android:layout_width="150dp"
+            android:layout_width="160dp"
             android:layout_height="50dp"
             android:text="Choose Photo"
             android:layout_gravity="right"
@@ -57,15 +48,15 @@
 
         <Button
             android:id="@+id/saveBtn"
-            android:layout_width="150dp"
+            android:layout_width="160dp"
             android:layout_height="50dp"
             android:text="Save Photo"
             android:layout_row="1"
             android:layout_column="0" />
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="160dp"
+            android:layout_height="50dp"
             android:text="Network Message"
             android:id="@+id/netBtn"
             android:layout_gravity="right"
@@ -73,8 +64,8 @@
             android:layout_column="1" />
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="160dp"
+            android:layout_height="50dp"
             android:text="Network Image"
             android:id="@+id/netImageBtn"
             android:layout_row="3"

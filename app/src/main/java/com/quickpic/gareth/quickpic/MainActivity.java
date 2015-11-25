@@ -109,7 +109,6 @@ public class MainActivity extends ActionBarActivity
     {
         super.onActivityResult(requestCode, resultCode, data);
 
-
         if (resultCode == RESULT_OK)
         {
             if (requestCode ==  CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE)
@@ -172,11 +171,10 @@ public class MainActivity extends ActionBarActivity
                 c.close();
                 Bitmap thumbnail = (BitmapFactory.decodeFile(picturePath));
 
+                viewImage.setImageResource(0);
+
                 Bitmap preview = convertToMutable(thumbnail);
-                preview.setWidth(3072);
-                preview.setHeight(4096);
                 Drawable preview2 = new BitmapDrawable(getResources(), preview);
-                //viewImage.setImageBitmap(preview);
                 viewImage.setBackground(preview2);
             }
         }
