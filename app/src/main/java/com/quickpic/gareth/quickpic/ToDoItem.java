@@ -2,11 +2,18 @@ package com.quickpic.gareth.quickpic;
 
 public class ToDoItem
 {
+    // these columns correspond to the columns in the Mobile Service
     @com.google.gson.annotations.SerializedName("text")
     private String mText; //Item text
 
+    @com.google.gson.annotations.SerializedName("__deleted")
+    private String mDeleted; //Item deleted
+
     @com.google.gson.annotations.SerializedName("id")
     private String mId; //Item Id
+
+    @com.google.gson.annotations.SerializedName("userId")
+    private String mUserId; //User Id
 
     @com.google.gson.annotations.SerializedName("complete")
     private boolean mComplete; //Indicates if the item is completed
@@ -35,7 +42,6 @@ public class ToDoItem
     @com.google.gson.annotations.SerializedName("containerName")
     private String mContainerName; //ContainerName - like a directory, holds blobs
 
-
     public String getContainerName()
     {
         return mContainerName; //Returns the item ContainerName
@@ -54,11 +60,13 @@ public class ToDoItem
         return mResourceName;// Returns the item ResourceName
     }
 
-
     public final void setResourceName(String ResourceName)
     {
         mResourceName = ResourceName;// Sets the item ResourceName
     }
+
+    @com.google.gson.annotations.SerializedName("__createdAt")
+    private String mDate;
 
     @com.google.gson.annotations.SerializedName("sasQueryString")
     private String mSasQueryString; //SasQueryString - permission to write to storage
@@ -73,13 +81,7 @@ public class ToDoItem
         mSasQueryString = SasQueryString; //Sets the item SasQueryString
     }
 
-    @Override
-    public String toString()
-    {
-        return getText();
-    }
-
-    public ToDoItem(String text, String id, String containerName, String resourceName, String imageUri, String sasQueryString)
+    public ToDoItem(String text, String id, String containerName, String resourceName, String imageUri, String sasQueryString, String date, String userId, String deleted)
     {
         this.setText(text);
         this.setId(id);
@@ -87,6 +89,9 @@ public class ToDoItem
         this.setResourceName(resourceName);
         this.setImageUri(imageUri);
         this.setSasQueryString(sasQueryString);
+        this.setDate(date);
+        this.setUserId(userId);
+        this.setDeleted(deleted);
         // Initializes a new ToDoItem
     }
 
@@ -107,7 +112,7 @@ public class ToDoItem
 
     public final void setId(String id)
     {
-        mId = id; // Indicates if the item is marked as completed
+        mId = id;
     }
 
     public boolean isComplete()
@@ -115,10 +120,39 @@ public class ToDoItem
         return mComplete;//Indicates if the item is marked as completed
     }
 
-
     public void setComplete(boolean complete)
     {
         mComplete = complete;//Marks the item as completed or incompleted
+    }
+
+    public String getDate()
+    {
+        return mDate;
+    }
+
+    public final void setDate(String date)
+    {
+        mDate = date;
+    }
+
+    public String getDeleted()
+    {
+        return mDeleted;
+    }
+
+    public final void setDeleted(String deleted)
+    {
+        mDeleted = deleted;
+    }
+
+    public String getUserId()
+    {
+        return mUserId;
+    }
+
+    public final void setUserId(String userId)
+    {
+        mUserId = userId;
     }
 
     @Override
@@ -126,6 +160,4 @@ public class ToDoItem
     {
         return o instanceof ToDoItem && ((ToDoItem) o).mId == mId;
     }
-
-
 }

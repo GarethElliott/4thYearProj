@@ -2,21 +2,19 @@ package com.quickpic.gareth.quickpic;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
-import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.AppCompatActivity;
-import android.text.InputType;
-import android.view.View;
-import android.widget.AdapterView;
+import android.support.v7.app.ActionBarActivity;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -30,12 +28,18 @@ import com.microsoft.windowsazure.mobileservices.http.NextServiceFilterCallback;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilter;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilterRequest;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilterResponse;
-import com.microsoft.windowsazure.mobileservices.table.TableOperationCallback;
+import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import java.net.MalformedURLException;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
-public class MainActivity extends AppCompatActivity
+import static com.microsoft.windowsazure.mobileservices.table.query.QueryOperations.val;
+
+
+public class UserPhotoActivity extends ActionBarActivity
 {
+
     private ProgressBar mProgressBar;
     private MobileServiceClient mClient;
     public boolean bAuthenticating = false;
@@ -47,56 +51,43 @@ public class MainActivity extends AppCompatActivity
 
     ListView listView;
     ArrayAdapter<String> listAdapter;
-    String fragmentArray[] = {"TAKE PHOTO", "SEARCH USER", "MY PHOTOS", "FOLLOWING" };
+    String fragmentArray[] = {"Take Photo", "Search Users", "My Photos", "Following" };
     DrawerLayout drawerLayout;
     public String username;
+    public TextView usernameDisplay;
+    public MobileServiceTable<ToDoItem> mToDoTable;
+    public MobileServiceTable<User> uToDoTable;
+    public ViewItemAdapter mAdapter;
+    public TextView user;
+    ListView listViewToView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_user_photo);
+
         mProgressBar = (ProgressBar) findViewById(R.id.firstProgressBar);
         mProgressBar.setVisibility(ProgressBar.GONE);
+        usernameDisplay = (TextView) findViewById(R.id.nameTextView);
         listView= (ListView) findViewById(R.id.listview);
         listAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, fragmentArray);
         listView.setAdapter(listAdapter);
         drawerLayout = (DrawerLayout) findViewById(R.id.drawerlayout);
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
-        {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
-            {
-                Fragment fragment;
-                switch(position)
-                {
-                    case 0:
-                        fragment = new FragmentOne();
-                        break;
-                    case 1:
-                        fragment = new FragmentTwo();
-                        break;
-                    case 2:
-                        fragment = new FragmentThree();
-                        break;
-                    case 3:
-                        fragment = new FragmentFour();
-                        break;
-                    default:
-                        fragment = new FragmentOne();
-                }
-
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.RelLayout1, fragment).commit();
-                drawerLayout.closeDrawers();
-            }
-        });
+        mAdapter = new ViewItemAdapter(this, R.layout.row_list_to_view);
+        user = (TextView) findViewById(R.id.nameTextView);
+        listViewToView = (ListView) findViewById(R.id.listView);
+        listViewToView.setAdapter(mAdapter);
 
         try
         {
             // Mobile Service URL and key
-            mClient = new MobileServiceClient("https://todosamplereal.azure-mobile.net/", "XWUqHkNkBoZErttfAkxVeApajelIEB73", this).withFilter(new ProgressFilter());
+            mClient = new MobileServiceClient(
+                    "https://todosamplereal.azure-mobile.net/",
+                    "XWUqHkNkBoZErttfAkxVeApajelIEB73", this)
+                    .withFilter(new ProgressFilter());
+
 
             authenticate(false);
         }
@@ -110,9 +101,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-
-
-
+    //User Login with Facebook
     private void authenticate(boolean bRefreshCache)
     {
         bAuthenticating = true;
@@ -130,7 +119,6 @@ public class MainActivity extends AppCompatActivity
                         if (exception == null)
                         {
                             cacheUserToken(mClient.getCurrentUser());
-                            setUserName();
                         }
                         else
                         {
@@ -152,53 +140,74 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-
-
-    private void setUserName()
+    private void createTable()
     {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Please enter a username");
+        mToDoTable = mClient.getTable(ToDoItem.class);
 
-        // Set up the input
-        final EditText input = new EditText(this);
-        // Specify the type of input expected
-        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
-        builder.setView(input);
+        refreshItemsFromTable();
+    }
 
-        // Set up the buttons
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener()
+
+    public void refreshItemsFromTable()
+    {
+        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>()
         {
             @Override
-            public void onClick(DialogInterface dialog, int which)
+            protected Void doInBackground(Void... params)
             {
-                SharedPreferences prefs = getSharedPreferences(SHAREDPREFFILE, Context.MODE_PRIVATE);
-                String userId = prefs.getString(USERIDPREF, "undefined");
-                username = input.getText().toString();
-                User user = new User(userId, username);
-                user.setUsername(username);
-                user.setId(userId);
-                mClient.getTable(User.class).insert(user, new TableOperationCallback<User>()
+                try
                 {
-                    public void onCompleted(User entity, Exception exception, ServiceFilterResponse response)
-                    {
-                        if (exception == null)
-                        {
-                        }
-                        else
-                        {
-                        }
-                    }
-                });
-            }
-        });
+                    final List<ToDoItem> results = refreshItemsFromMobileServiceTable();
 
-        builder.show();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mAdapter.clear();
+
+                            for (ToDoItem item : results) {
+                                mAdapter.add(item);
+                            }
+                        }
+                    });
+                }
+                catch (final Exception e)
+                {
+                    createAndShowDialogFromTask(e, "Error 7");
+                }
+
+                return null;
+            }
+        };
+
+        runAsyncTask(task);
+    }
+
+    private List<ToDoItem> refreshItemsFromMobileServiceTable() throws ExecutionException, InterruptedException
+    {
+        SharedPreferences prefs = getSharedPreferences(SHAREDPREFFILE, Context.MODE_PRIVATE);
+        String userId = prefs.getString(USERIDPREF, "undefined");
+
+        List<ToDoItem> userPhotos = mToDoTable.where().field("userId").eq(val(userId)).execute().get();
+
+        uToDoTable = mClient.getTable(User.class);
+        List<User> users = uToDoTable.where().field("id").eq(val(userId)).execute().get();
+
+        if(users.get(0).getUsername() == null)
+        {
+            user.setText(userId);
+        }
+        else
+        {
+            user.setText(users.get(0).getUsername());
+        }
+
+        return userPhotos;
     }
 
     private void cacheUserToken(MobileServiceUser user)
     {
         SharedPreferences prefs = getSharedPreferences(SHAREDPREFFILE, Context.MODE_PRIVATE);
-        Editor editor = prefs.edit();
+        SharedPreferences.Editor editor = prefs.edit();
         editor.putString(USERIDPREF, user.getUserId());
         editor.putString(TOKENPREF, user.getAuthenticationToken());
         editor.apply();
@@ -222,6 +231,9 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+
+
+    //Error Messaging Methods
     private void createAndShowDialogFromTask(final Exception exception, String title)
     {
         createAndShowDialog(exception, "Error");
@@ -244,6 +256,18 @@ public class MainActivity extends AppCompatActivity
         builder.setMessage(message);
         builder.setTitle(title);
         builder.create().show();
+    }
+
+    private AsyncTask<Void, Void, Void> runAsyncTask(AsyncTask<Void, Void, Void> task)
+    {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+        {
+            return task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
+        else
+        {
+            return task.execute();
+        }
     }
 
 
@@ -294,4 +318,9 @@ public class MainActivity extends AppCompatActivity
             return resultFuture;
         }
     }
+
+
+
+
+
 }
