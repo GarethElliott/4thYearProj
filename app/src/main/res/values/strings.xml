@@ -13,6 +13,7 @@
     <string name="enterName_text">ENTER A USERNAME</string>
     <string name="item_text">Item Text</string>
     <string name="date_text">Date and Time</string>
+    <string name="newsfeed_text">News Feed</string>
     <string name="upload_button_text">Save</string>
     <string name="title_activity_to_do">ToDoActivity</string>
     <string name="title_activity_main_activity2">MainActivity2</string>

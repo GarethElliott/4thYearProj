@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">QuickPic</string>
+
+    <string name="hello_world">Hola Mundo</string>
+    <string name="action_settings">ajustes</string>
+    <string name="add_textbox_hint">Ingrese texto</string>
+    <string name="menu_refresh">Refrescar</string>
+    <string name="title_activity_net_image">NetImage</string>
+    <string name="preview_button_text">Tomar foto</string>
+    <string name="userId_text">Identidad de usuario</string>
+    <string name="userName_text">Nombre de usuario</string>
+    <string name="enterName_text">Introduzca un nombre de usuario</string>
+    <string name="item_text">elemento de texto</string>
+    <string name="date_text">Fecha y hora</string>
+    <string name="newsfeed_text">Noticias</string>
+    <string name="upload_button_text">Salvar</string>
+
+    <string name="title_section1">Sección 1</string>
+    <string name="title_section2">Sección 2</string>
+    <string name="title_section3">Sección 3</string>
+
+    <string name="navigation_drawer_open">Abrir panel de navegación</string>
+    <string name="navigation_drawer_close">cierre el cajón de navegación</string>
+
+    <string name="action_example">Example action</string>
+    <string name="title_activity_fragment_one">FragmentOne</string>
+    <string name="title_activity_fragment_two">FragmentTwo</string>
+    <string name="title_activity_fragment_three">FragmentThree</string>
+    <string name="title_activity_user_photo">UserPhotoActivity</string>
+</resources>
