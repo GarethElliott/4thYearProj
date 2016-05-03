@@ -3,21 +3,19 @@ package com.quickpic.gareth.quickpic;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
-import android.os.Build;
+import android.graphics.Bitmap;
+import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.microsoft.azure.storage.CloudStorageAccount;
-import com.microsoft.azure.storage.blob.CloudBlobClient;
-import com.microsoft.azure.storage.blob.CloudBlobContainer;
-import com.microsoft.azure.storage.blob.CloudBlockBlob;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.NetworkImageView;
+import com.android.volley.toolbox.Volley;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.UserAuthenticationCallback;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAuthenticationProvider;
@@ -26,20 +24,25 @@ import com.microsoft.windowsazure.mobileservices.http.ServiceFilterResponse;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import java.net.MalformedURLException;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
-public class UserConAdapter extends ArrayAdapter<UserConnection>
+import static com.microsoft.windowsazure.mobileservices.table.query.QueryOperations.val;
+
+public class NewsFeedAdapter extends ArrayAdapter<ToDoItem>
 {
     Context mContext;
     int mLayoutResourceId;
+    public MobileServiceTable<User> uToDoTable;
     private MobileServiceClient mClient;
     public boolean bAuthenticating = false;
     public final Object mAuthenticationLock = new Object();
-    public MobileServiceTable<UserConnection> ucToDoTable;
+
     public static final String SHAREDPREFFILE = "temp";
     public static final String USERIDPREF = "uid";
     public static final String TOKENPREF = "tkn";
 
-    public UserConAdapter(Context context, int layoutResourceId)
+    public NewsFeedAdapter(Context context, int layoutResourceId)
     {
         super(context, layoutResourceId);
 
@@ -51,12 +54,21 @@ public class UserConAdapter extends ArrayAdapter<UserConnection>
     public View getView(int position, View convertView, ViewGroup parent)
     {
         View row = convertView;
+        final ToDoItem currentItem = getItem(position);
+
+        if (row == null)
+        {
+            LayoutInflater inflater = ((Activity) mContext).getLayoutInflater();
+            row = inflater.inflate(mLayoutResourceId, parent, false);
+        }
 
         try
         {
+            // Mobile Service URL and key
             mClient = new MobileServiceClient("https://todosamplereal.azure-mobile.net/", "XWUqHkNkBoZErttfAkxVeApajelIEB73", getContext());
             authenticate(false);
         }
+
         catch (MalformedURLException e)
         {
             createAndShowDialog(new Exception("There was an error creating the Mobile Service. Verify the URL"), "Error");
@@ -66,85 +78,26 @@ public class UserConAdapter extends ArrayAdapter<UserConnection>
             createAndShowDialog(e, "Error");
         }
 
-        final UserConnection currentCon = getItem(position);
+        row.setTag(currentItem);
 
-        if (row == null)
-        {
-            LayoutInflater inflater = ((Activity) mContext).getLayoutInflater();
-            row = inflater.inflate(mLayoutResourceId, parent, false);
-        }
+        final TextView textU = (TextView) row.findViewById(R.id.userPhotoName);
+        textU.setText(currentItem.getUserName());
 
-        row.setTag(currentCon);
+        final TextView textT = (TextView) row.findViewById(R.id.TextToView);
+        textT.setText(currentItem.getText());
 
-        final ImageView delConBtn = (ImageView) row.findViewById(R.id.delConBtn);
+        final TextView textD = (TextView) row.findViewById(R.id.DateToView);
+        String date = currentItem.getDate();
+        String shortDate = date.substring(0, 10);
+        String time = date.substring(11, 16);
+        textD.setText(time + " - " + shortDate);
 
-        delConBtn.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                deleteCon(currentCon.getId());
-            }
-        });
-
-        final TextView userName = (TextView) row.findViewById(R.id.UserName);
-        userName.setText("" + currentCon.getConnectionName());
-
-        final TextView userDate = (TextView) row.findViewById(R.id.UserConDate);
-        String shortDate = currentCon.getDate();
-        shortDate = shortDate.substring(0, 10);
-        userDate.setText("FOLLOWING SINCE: " + shortDate);
-
-        final ImageView photosBtn = (ImageView) row.findViewById(R.id.photosBtn);
-
-        photosBtn.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                Intent intent = new Intent(mContext, UserPhotoActivity.class);
-                intent.putExtra("connectionId", currentCon.getConnectionId());
-                mContext.startActivity(intent);
-            }
-        });
+        ImageLoader mImageLoader;
+        mImageLoader = NewsSingle.getInstance(getContext()).getImageLoader();
+        final NetworkImageView imageV = (NetworkImageView) row.findViewById(R.id.NetworkImageView);
+        imageV.setImageUrl(currentItem.getImageUri(), mImageLoader);
 
         return row;
-    }
-
-    public void deleteCon(final String conId)
-    {
-        ucToDoTable = mClient.getTable(UserConnection.class);
-        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>()
-        {
-            @Override
-            protected Void doInBackground(Void... params)
-            {
-                try
-                {
-                    ucToDoTable.delete(conId);
-                }
-
-                catch (final Exception e)
-                {
-                    System.out.println("Exception:  " + e);
-                }
-                return null;
-            }
-        };
-
-        runAsyncTask(task);
-    }
-
-    private AsyncTask<Void, Void, Void> runAsyncTask(AsyncTask<Void, Void, Void> task)
-    {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-        {
-            return task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        }
-        else
-        {
-            return task.execute();
-        }
     }
 
     private void authenticate(boolean bRefreshCache)
@@ -229,5 +182,59 @@ public class UserConAdapter extends ArrayAdapter<UserConnection>
         builder.setMessage(message);
         builder.setTitle(title);
         builder.create().show();
+    }
+}
+
+class NewsSingle
+{
+    private static NewsSingle mInstance;
+    private RequestQueue mRequestQueue;
+    private ImageLoader mImageLoader;
+    private static Context mCtx;
+
+    private NewsSingle(Context context)
+    {
+        mCtx = context;
+        mRequestQueue = getRequestQueue();
+
+        mImageLoader = new ImageLoader(mRequestQueue, new ImageLoader.ImageCache()
+        {
+            private final LruCache<String, Bitmap> cache = new LruCache<String, Bitmap>(20);
+
+            @Override
+            public Bitmap getBitmap(String url)
+            {
+                return cache.get(url);
+            }
+
+            @Override
+            public void putBitmap(String url, Bitmap bitmap)
+            {
+                cache.put(url, bitmap);
+            }
+        });
+    }
+
+    public static synchronized NewsSingle getInstance(Context context)
+    {
+        if (mInstance == null)
+        {
+            mInstance = new NewsSingle(context);
+        }
+        return mInstance;
+    }
+
+    public RequestQueue getRequestQueue()
+    {
+        if (mRequestQueue == null)
+        {
+            mRequestQueue = Volley.newRequestQueue(mCtx.getApplicationContext());
+        }
+        return mRequestQueue;
+    }
+
+    public ImageLoader getImageLoader()
+    {
+        return mImageLoader;
     }
 }

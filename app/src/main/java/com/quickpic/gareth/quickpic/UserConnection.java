@@ -5,23 +5,31 @@ public class UserConnection
     @com.google.gson.annotations.SerializedName("id")
     private String mId;
 
-    @com.google.gson.annotations.SerializedName("user")
-    private String mUser;
+    @com.google.gson.annotations.SerializedName("userid")
+    private String mUserId;
 
-    @com.google.gson.annotations.SerializedName("connection")
-    private String mConnection; // username
+    @com.google.gson.annotations.SerializedName("conid")
+    private String mConnectionId; // username
+
+    @com.google.gson.annotations.SerializedName("conname")
+    private String mConnectionName; // username
+
+    @com.google.gson.annotations.SerializedName("__createdAt")
+    private String mDate; // username
 
     public UserConnection() //ToDoItem constructor
     {
-        mUser = "";
-        mConnection = "";
+        mUserId = "";
+        mConnectionId = "";
     }
 
-    public UserConnection(String id, String user, String connection)
+    public UserConnection(String id, String userid, String username, String conid, String conname)
     {
         this.setId(id);
-        this.setUser(user);
-        this.setConnection(connection);
+        this.setUserId(userid);
+        this.setUserId(username);
+        this.setConnectionId(conid);
+        this.setConnectionName(conname);
     }
 
     public String getId()
@@ -34,24 +42,44 @@ public class UserConnection
         mId = id;
     }
 
-    public String getUser()
+    public String getUserId()
     {
-        return mUser;
+        return mUserId;
     }
 
-    public final void setUser(String user)
+    public final void setUserId(String userid)
     {
-        mUser = user;
+        mUserId = userid;
     }
 
-    public String getConnection()
+    public String getConnectionId()
     {
-        return mConnection;
+        return mConnectionId;
     }
 
-    public final void setConnection(String connection)
+    public final void setConnectionId(String connectionId)
     {
-        mConnection = connection;
+        mConnectionId = connectionId;
+    }
+
+    public String getConnectionName()
+    {
+        return mConnectionName;
+    }
+
+    public final void setConnectionName(String connectionName)
+    {
+        mConnectionName = connectionName;
+    }
+
+    public String getDate()
+    {
+        return mDate;
+    }
+
+    public final void setDate(String date)
+    {
+        mDate = date;
     }
 
     @Override

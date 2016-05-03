@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.content.Context;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.app.AlertDialog;
 import android.content.SharedPreferences;
@@ -15,7 +14,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.widget.ListView;
 import android.widget.TextView;
-
+import java.util.Collections;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -30,19 +29,18 @@ import com.microsoft.windowsazure.mobileservices.http.ServiceFilterRequest;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilterResponse;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import java.net.MalformedURLException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import static com.microsoft.windowsazure.mobileservices.table.query.QueryOperations.val;
 
 public class FragmentThree extends Fragment
 {
-    View myView;
-    ListView listViewToView;
-
+    public View myView;
+    public ListView listViewToView;
     public static final String SHAREDPREFFILE = "temp";
     public static final String USERIDPREF = "uid";
     public static final String TOKENPREF = "tkn";
-
     public boolean bAuthenticating = false;
     public final Object mAuthenticationLock = new Object();
     public MobileServiceClient mClient;
@@ -51,7 +49,6 @@ public class FragmentThree extends Fragment
     public MobileServiceTable<User> uToDoTable;
     public ViewItemAdapter mAdapter;
     public MainActivity parent;
-    public ImageView mNetworkImageView;
     public TextView user;
     public TextView date;
 
@@ -61,7 +58,6 @@ public class FragmentThree extends Fragment
         myView = inflater.inflate(R.layout.fragment_three, container, false);
         mProgressBar = (ProgressBar) myView.findViewById(R.id.loadingProgressBar);
         mProgressBar.setVisibility(ProgressBar.GONE);
-        mNetworkImageView = (ImageView) myView.findViewById(R.id.profileImageView);
         mAdapter = new ViewItemAdapter(getContext(), R.layout.row_list_to_view);
         user = (TextView) myView.findViewById(R.id.nameTextView);
         date = (TextView) myView.findViewById(R.id.dateTextView);
@@ -86,10 +82,6 @@ public class FragmentThree extends Fragment
 
         return myView;
     }
-
-
-
-
 
     //User Login with Facebook
     private void authenticate(boolean bRefreshCache)
@@ -207,8 +199,7 @@ public class FragmentThree extends Fragment
 
     private List<ToDoItem> refreshItemsFromMobileServiceTable() throws ExecutionException, InterruptedException
     {
-        SharedPreferences prefs = getActivity().getSharedPreferences(SHAREDPREFFILE, Context.MODE_PRIVATE);
-        String userId = prefs.getString(USERIDPREF, "undefined");
+        String userId = mClient.getCurrentUser().getUserId();
 
         List<ToDoItem> userPhotos = mToDoTable.where().field("userId").eq(val(userId)).execute().get();
 
@@ -224,8 +215,17 @@ public class FragmentThree extends Fragment
             user.setText(users.get(0).getUsername());
             String shortDate = users.get(0).getDate();
             shortDate = shortDate.substring(0, 10);
-            date.setText("MEMBER SINCE: " + shortDate);
+            date.setText(shortDate);
         }
+
+        Collections.sort(userPhotos, new Comparator<ToDoItem>()
+        {
+            @Override
+            public int compare(ToDoItem lhs, ToDoItem rhs)
+            {
+                return String.valueOf(rhs.getDate()).compareTo(lhs.getDate());
+            }
+        });
 
         return userPhotos;
     }

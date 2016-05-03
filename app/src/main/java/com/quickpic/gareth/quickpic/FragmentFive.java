@@ -1,17 +1,20 @@
 package com.quickpic.gareth.quickpic;
 
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
+import android.content.Context;
 import android.widget.ProgressBar;
+import android.app.AlertDialog;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.os.Build;
+import android.widget.ListView;
+import android.widget.TextView;
+import java.util.Collections;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -26,37 +29,38 @@ import com.microsoft.windowsazure.mobileservices.http.ServiceFilterRequest;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilterResponse;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import java.net.MalformedURLException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import static com.microsoft.windowsazure.mobileservices.table.query.QueryOperations.val;
 
-public class FragmentFour extends Fragment
+public class FragmentFive extends Fragment
 {
+    public View myView;
+    public ListView listViewToView;
     public static final String SHAREDPREFFILE = "temp";
     public static final String USERIDPREF = "uid";
     public static final String TOKENPREF = "tkn";
-
     public boolean bAuthenticating = false;
     public final Object mAuthenticationLock = new Object();
     public MobileServiceClient mClient;
     public ProgressBar mProgressBar;
+    public MobileServiceTable<ToDoItem> mToDoTable;
     public MobileServiceTable<UserConnection> ucToDoTable;
-    public UserConAdapter ucAdapter;
+    public NewsFeedAdapter mAdapter;
     public MainActivity parent;
-    View myView;
-    ListView listViewUserCon;
-
+    public TextView newsFeed;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        myView = inflater.inflate(R.layout.fragment_four, container, false);
+        myView = inflater.inflate(R.layout.fragment_five, container, false);
         mProgressBar = (ProgressBar) myView.findViewById(R.id.loadingProgressBar);
         mProgressBar.setVisibility(ProgressBar.GONE);
-
-        ucAdapter = new UserConAdapter(getContext(), R.layout.row_list_userconnections);
-        listViewUserCon = (ListView) myView.findViewById(R.id.listView);
-        listViewUserCon.setAdapter(ucAdapter);
+        mAdapter = new NewsFeedAdapter(getContext(), R.layout.row_list_news_feed);
+        newsFeed = (TextView) myView.findViewById(R.id.newsTextView);
+        listViewToView = (ListView) myView.findViewById(R.id.listView);
+        listViewToView.setAdapter(mAdapter);
         parent = (MainActivity) getActivity();
 
         try
@@ -74,13 +78,8 @@ public class FragmentFour extends Fragment
             createAndShowDialog(e, "Error");
         }
 
-        createTable();
-
         return myView;
     }
-
-
-
 
     //User Login with Facebook
     private void authenticate(boolean bRefreshCache)
@@ -100,6 +99,7 @@ public class FragmentFour extends Fragment
                         if (exception == null)
                         {
                             cacheUserToken(mClient.getCurrentUser());
+                            createTable();
                         }
                         else
                         {
@@ -118,6 +118,7 @@ public class FragmentFour extends Fragment
                 bAuthenticating = false;
                 mAuthenticationLock.notifyAll();
             }
+            createTable();
         }
     }
 
@@ -133,8 +134,8 @@ public class FragmentFour extends Fragment
     private boolean loadUserTokenCache(MobileServiceClient client)
     {
         SharedPreferences prefs = getActivity().getSharedPreferences(SHAREDPREFFILE, Context.MODE_PRIVATE);
-
         String userId = prefs.getString(USERIDPREF, "undefined");
+
         if (userId.equals("undefined"))
             return false;
         String token = prefs.getString(TOKENPREF, "undefined");
@@ -150,33 +151,34 @@ public class FragmentFour extends Fragment
 
     private void createTable()
     {
-        ucToDoTable = mClient.getTable(UserConnection.class);
+        mToDoTable = mClient.getTable(ToDoItem.class);
 
-        refreshUserConFromTable();
+        refreshItemsFromTable();
     }
 
 
-    public void refreshUserConFromTable()
+    public void refreshItemsFromTable()
     {
         AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>()
         {
             @Override
             protected Void doInBackground(Void... params)
             {
+                Looper.prepare();
                 try
                 {
-                    final List<UserConnection> results = refreshUserConFromMobileServiceTable();
+                    final List<ToDoItem> results = refreshItemsFromMobileServiceTable();
 
                     parent.runOnUiThread(new Runnable()
                     {
                         @Override
                         public void run()
                         {
-                            ucAdapter.clear();
+                            mAdapter.clear();
 
-                            for (UserConnection userCon : results)
+                            for (ToDoItem item : results)
                             {
-                                ucAdapter.add(userCon);
+                                mAdapter.add(item);
                             }
                         }
                     });
@@ -193,14 +195,31 @@ public class FragmentFour extends Fragment
         runAsyncTask(task);
     }
 
-    private List<UserConnection> refreshUserConFromMobileServiceTable() throws ExecutionException, InterruptedException
+    private List<ToDoItem> refreshItemsFromMobileServiceTable() throws ExecutionException, InterruptedException
     {
         String userId = mClient.getCurrentUser().getUserId();
 
         ucToDoTable = mClient.getTable(UserConnection.class);
         List<UserConnection> userCons = ucToDoTable.where().field("userid").eq(val(userId)).execute().get();
 
-        return userCons;
+        mToDoTable = mClient.getTable(ToDoItem.class);
+        List<ToDoItem> newsPhotos = mToDoTable.where().field("userId").eq(val(userId)).execute().get();
+
+        for(int i = 0; i < userCons.size(); i++)
+        {
+            newsPhotos.addAll(mToDoTable.where().field("userId").eq(val(userCons.get(i).getConnectionId())).execute().get());
+        }
+
+        Collections.sort(newsPhotos, new Comparator<ToDoItem>()
+        {
+            @Override
+            public int compare(ToDoItem lhs, ToDoItem rhs)
+            {
+                return String.valueOf(rhs.getDate()).compareTo(lhs.getDate());
+            }
+        });
+
+        return newsPhotos;
     }
 
     private AsyncTask<Void, Void, Void> runAsyncTask(AsyncTask<Void, Void, Void> task)

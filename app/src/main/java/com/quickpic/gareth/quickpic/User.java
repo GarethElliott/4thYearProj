@@ -5,6 +5,9 @@ public class User
     @com.google.gson.annotations.SerializedName("id")
     private String mId;
 
+    @com.google.gson.annotations.SerializedName("userId")
+    private String mUserId;
+
     @com.google.gson.annotations.SerializedName("username")
     private String mUsername; // username
 
@@ -31,6 +34,16 @@ public class User
     public final void setId(String id)
     {
         mId = id;
+    }
+
+    public String getUserId()
+    {
+        return mUserId;
+    }
+
+    public final void setUserId(String userId)
+    {
+        mUserId = userId;
     }
 
     public String getUsername()

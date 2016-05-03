@@ -5,6 +5,8 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -45,6 +47,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -59,6 +63,7 @@ public class FragmentOne extends Fragment
     public final Object mAuthenticationLock = new Object();
     private ProgressBar mProgressBar;
     private MobileServiceTable<ToDoItem> mToDoTable;
+    private MobileServiceTable<User> uToDoTable;
     private EditText mTextNewToDo;
     public static final String SHAREDPREFFILE = "temp";
     public static final String USERIDPREF = "uid";
@@ -124,6 +129,8 @@ public class FragmentOne extends Fragment
                 path = file.getPath();
                 startActivityForResult(i, 1);
                 photoTaken = true;
+                String fullPath = file.getAbsolutePath();
+                setBackgroundImage(fullPath);
             }
         });
 
@@ -132,18 +139,23 @@ public class FragmentOne extends Fragment
             @Override
             public void onClick(View v)
             {
-                if(photoTaken == true)
+                if(photoTaken)
                 {
                     uploadPhoto(v);
                 }
                 else
                 {
-                    Toast.makeText(getContext(), "Photo Not Taken", Toast.LENGTH_SHORT);
+                    Toast.makeText(getContext(), "Photo Not Taken", Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
         return rootView;
+    }
+
+    public void setBackgroundImage(String path)
+    {
+
     }
 
     @Override
@@ -207,17 +219,17 @@ public class FragmentOne extends Fragment
         }
 
         final ToDoItem item = new ToDoItem();
-        SharedPreferences prefs = parent.getSharedPreferences(SHAREDPREFFILE, Context.MODE_PRIVATE);
-        String userId = prefs.getString(USERIDPREF, "undefined");
+        String userId = mClient.getCurrentUser().getUserId();
 
         item.setText(mTextNewToDo.getText().toString());
-        item.setComplete(false);
+        item.setComplete(true);
         item.setContainerName("todoitemimages");
         item.setUserId(userId);
+        item.setUserName(username);
         UUID uuid = UUID.randomUUID();
         final String uuidInString = uuid.toString();
         item.setResourceName(uuidInString);
-        item.setImageUri("http://todosample.blob.core.windows.net:80/todoitemimages/" + uuidInString);
+        item.setImageUri("http://todosample.blob.core.windows.net/todoitemimages/" + uuidInString);
 
         mClient.getTable(ToDoItem.class).insert(item, new TableOperationCallback<ToDoItem>()
         {
@@ -234,8 +246,7 @@ public class FragmentOne extends Fragment
             }
         });
 
-        final AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>()
-        {
+        final AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params)
             {
@@ -266,14 +277,6 @@ public class FragmentOne extends Fragment
         mTextNewToDo.setText("");
     }
 
-
-
-
-
-
-
-
-
     private AsyncTask<Void, Void, Void> runAsyncTask(AsyncTask<Void, Void, Void> task)
     {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
@@ -284,13 +287,6 @@ public class FragmentOne extends Fragment
         {
             return task.execute();
         }
-    }
-
-
-    public ToDoItem addItemInTable(ToDoItem item) throws ExecutionException, InterruptedException
-    {
-        ToDoItem entity = mToDoTable.insert(item).get();
-        return entity;
     }
 
     private void refreshItemsFromTable()
@@ -318,10 +314,22 @@ public class FragmentOne extends Fragment
 
     private List<ToDoItem> refreshItemsFromMobileServiceTable() throws ExecutionException, InterruptedException
     {
-        SharedPreferences prefs = parent.getSharedPreferences(SHAREDPREFFILE, Context.MODE_PRIVATE);
-        String userId = prefs.getString(USERIDPREF, "undefined");
+        String userId = mClient.getCurrentUser().getUserId();
+        uToDoTable = mClient.getTable(User.class);
 
+        List<User> users = uToDoTable.where().field("userId").eq(val(userId)).execute().get();
+
+        username = users.get(0).getUsername();
         List<ToDoItem> userPhotos = mToDoTable.where().field("userId").eq(val(userId)).execute().get();
+
+        Collections.sort(userPhotos, new Comparator<ToDoItem>()
+        {
+            @Override
+            public int compare(ToDoItem lhs, ToDoItem rhs)
+            {
+                return String.valueOf(rhs.getDate()).compareTo(lhs.getDate());
+            }
+        });
 
         return userPhotos;
     }
@@ -381,7 +389,6 @@ public class FragmentOne extends Fragment
     private boolean loadUserTokenCache(MobileServiceClient client)
     {
         SharedPreferences prefs = parent.getSharedPreferences(SHAREDPREFFILE, Context.MODE_PRIVATE);
-
         String userId = prefs.getString(USERIDPREF, "undefined");
         if (userId.equals("undefined"))
             return false;

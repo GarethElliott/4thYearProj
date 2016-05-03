@@ -8,8 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.widget.TextView;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.UserAuthenticationCallback;
@@ -17,7 +15,6 @@ import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAut
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilterResponse;
 import com.microsoft.windowsazure.mobileservices.table.TableOperationCallback;
-
 import java.net.MalformedURLException;
 import android.widget.ArrayAdapter;
 
@@ -62,8 +59,6 @@ public class UserAdapter extends ArrayAdapter<User>
 
         final User currentUser = getItem(position);
 
-
-
         if (row == null)
         {
             LayoutInflater inflater = ((Activity) mContext).getLayoutInflater();
@@ -79,7 +74,7 @@ public class UserAdapter extends ArrayAdapter<User>
 
         String shortDate = currentUser.getDate();
         shortDate = shortDate.substring(0, 10);
-        userDate.setText("MEMBER SINCE: " + shortDate);
+        userDate.setText(shortDate);
 
         final ImageView conBtn = (ImageView) row.findViewById(R.id.connectBtn);
 
@@ -92,8 +87,10 @@ public class UserAdapter extends ArrayAdapter<User>
                 String userId = prefs.getString(USERIDPREF, "undefined");
 
                 UserConnection uc = new UserConnection();
-                uc.setUser(userId);
-                uc.setConnection(currentUser.getUsername());
+                uc.setUserId(userId);
+                uc.setConnectionId(currentUser.getUserId());
+                uc.setConnectionName(currentUser.getUsername());
+                System.out.println("" + mClient.getCurrentUser().getUserId());
                 mClient.getTable(UserConnection.class).insert(uc, new TableOperationCallback<UserConnection>()
                 {
                     public void onCompleted(UserConnection entity, Exception exception, ServiceFilterResponse response)
@@ -104,7 +101,7 @@ public class UserAdapter extends ArrayAdapter<User>
                         }
                         else
                         {
-                            System.out.println("The fucking exception:  " + exception);
+                            System.out.println("The exception:  " + exception);
 
                         }
                     }
@@ -113,18 +110,6 @@ public class UserAdapter extends ArrayAdapter<User>
         });
 
         return row;
-    }
-
-    private AsyncTask<Void, Void, Void> runAsyncTask(AsyncTask<Void, Void, Void> task)
-    {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-        {
-            return task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        }
-        else
-        {
-            return task.execute();
-        }
     }
 
     private void authenticate(boolean bRefreshCache)
@@ -210,7 +195,4 @@ public class UserAdapter extends ArrayAdapter<User>
         builder.setTitle(title);
         builder.create().show();
     }
-
-
-
 }

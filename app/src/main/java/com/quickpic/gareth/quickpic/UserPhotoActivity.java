@@ -5,17 +5,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarActivity;
+import android.os.Looper;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.ArrayAdapter;
-import android.widget.ImageView;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -29,37 +24,28 @@ import com.microsoft.windowsazure.mobileservices.http.ServiceFilter;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilterRequest;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilterResponse;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
-
 import java.net.MalformedURLException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-
 import static com.microsoft.windowsazure.mobileservices.table.query.QueryOperations.val;
 
-
-public class UserPhotoActivity extends ActionBarActivity
+public class UserPhotoActivity extends AppCompatActivity
 {
-
-    private ProgressBar mProgressBar;
-    private MobileServiceClient mClient;
-    public boolean bAuthenticating = false;
-    public final Object mAuthenticationLock = new Object();
-
+    public ListView listViewToView;
     public static final String SHAREDPREFFILE = "temp";
     public static final String USERIDPREF = "uid";
     public static final String TOKENPREF = "tkn";
-
-    ListView listView;
-    ArrayAdapter<String> listAdapter;
-    String fragmentArray[] = {"Take Photo", "Search Users", "My Photos", "Following" };
-    DrawerLayout drawerLayout;
-    public String username;
-    public TextView usernameDisplay;
+    public boolean bAuthenticating = false;
+    public final Object mAuthenticationLock = new Object();
+    public MobileServiceClient mClient;
+    public ProgressBar mProgressBar;
     public MobileServiceTable<ToDoItem> mToDoTable;
     public MobileServiceTable<User> uToDoTable;
-    public ViewItemAdapter mAdapter;
+    public UserPhotoAdapter upAdapter;
     public TextView user;
-    ListView listViewToView;
+    public TextView date;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -67,28 +53,18 @@ public class UserPhotoActivity extends ActionBarActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_photo);
 
-        mProgressBar = (ProgressBar) findViewById(R.id.firstProgressBar);
+        mProgressBar = (ProgressBar) findViewById(R.id.loadingProgressBar);
         mProgressBar.setVisibility(ProgressBar.GONE);
-        usernameDisplay = (TextView) findViewById(R.id.nameTextView);
-        listView= (ListView) findViewById(R.id.listview);
-        listAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, fragmentArray);
-        listView.setAdapter(listAdapter);
-        drawerLayout = (DrawerLayout) findViewById(R.id.drawerlayout);
-
-        mAdapter = new ViewItemAdapter(this, R.layout.row_list_to_view);
+        upAdapter = new UserPhotoAdapter(this, R.layout.row_list_user_photo);
         user = (TextView) findViewById(R.id.nameTextView);
+        date = (TextView) findViewById(R.id.dateTextView);
         listViewToView = (ListView) findViewById(R.id.listView);
-        listViewToView.setAdapter(mAdapter);
+        listViewToView.setAdapter(upAdapter);
 
         try
         {
             // Mobile Service URL and key
-            mClient = new MobileServiceClient(
-                    "https://todosamplereal.azure-mobile.net/",
-                    "XWUqHkNkBoZErttfAkxVeApajelIEB73", this)
-                    .withFilter(new ProgressFilter());
-
-
+            mClient = new MobileServiceClient("https://todosamplereal.azure-mobile.net/", "XWUqHkNkBoZErttfAkxVeApajelIEB73", this).withFilter(new ProgressFilter());
             authenticate(false);
         }
         catch (MalformedURLException e)
@@ -99,6 +75,8 @@ public class UserPhotoActivity extends ActionBarActivity
         {
             createAndShowDialog(e, "Error");
         }
+
+        createTable();
     }
 
     //User Login with Facebook
@@ -119,6 +97,7 @@ public class UserPhotoActivity extends ActionBarActivity
                         if (exception == null)
                         {
                             cacheUserToken(mClient.getCurrentUser());
+
                         }
                         else
                         {
@@ -137,71 +116,8 @@ public class UserPhotoActivity extends ActionBarActivity
                 bAuthenticating = false;
                 mAuthenticationLock.notifyAll();
             }
+
         }
-    }
-
-    private void createTable()
-    {
-        mToDoTable = mClient.getTable(ToDoItem.class);
-
-        refreshItemsFromTable();
-    }
-
-
-    public void refreshItemsFromTable()
-    {
-        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>()
-        {
-            @Override
-            protected Void doInBackground(Void... params)
-            {
-                try
-                {
-                    final List<ToDoItem> results = refreshItemsFromMobileServiceTable();
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mAdapter.clear();
-
-                            for (ToDoItem item : results) {
-                                mAdapter.add(item);
-                            }
-                        }
-                    });
-                }
-                catch (final Exception e)
-                {
-                    createAndShowDialogFromTask(e, "Error 7");
-                }
-
-                return null;
-            }
-        };
-
-        runAsyncTask(task);
-    }
-
-    private List<ToDoItem> refreshItemsFromMobileServiceTable() throws ExecutionException, InterruptedException
-    {
-        SharedPreferences prefs = getSharedPreferences(SHAREDPREFFILE, Context.MODE_PRIVATE);
-        String userId = prefs.getString(USERIDPREF, "undefined");
-
-        List<ToDoItem> userPhotos = mToDoTable.where().field("userId").eq(val(userId)).execute().get();
-
-        uToDoTable = mClient.getTable(User.class);
-        List<User> users = uToDoTable.where().field("id").eq(val(userId)).execute().get();
-
-        if(users.get(0).getUsername() == null)
-        {
-            user.setText(userId);
-        }
-        else
-        {
-            user.setText(users.get(0).getUsername());
-        }
-
-        return userPhotos;
     }
 
     private void cacheUserToken(MobileServiceUser user)
@@ -231,31 +147,87 @@ public class UserPhotoActivity extends ActionBarActivity
         return true;
     }
 
-
-
-    //Error Messaging Methods
-    private void createAndShowDialogFromTask(final Exception exception, String title)
+    private void createTable()
     {
-        createAndShowDialog(exception, "Error");
+        mToDoTable = mClient.getTable(ToDoItem.class);
+
+        refreshItemsFromTable();
     }
 
-    private void createAndShowDialog(Exception exception, String title)
+
+    public void refreshItemsFromTable()
     {
-        Throwable ex = exception;
-        if (exception.getCause() != null)
+        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>()
         {
-            ex = exception.getCause();
-        }
-        createAndShowDialog(ex.getMessage(), title);
+            @Override
+            protected Void doInBackground(Void... params)
+            {
+                Looper.prepare();
+                try
+                {
+                    final List<ToDoItem> results = refreshItemsFromMobileServiceTable();
+
+                    runOnUiThread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            upAdapter.clear();
+
+                            for (ToDoItem item : results)
+                            {
+                                upAdapter.add(item);
+                            }
+                        }
+                    });
+                }
+                catch (final Exception e)
+                {
+                    createAndShowDialogFromTask(e, "Error 7");
+                }
+
+                return null;
+            }
+        };
+
+        runAsyncTask(task);
     }
 
-    private void createAndShowDialog(final String message, final String title)
+    private List<ToDoItem> refreshItemsFromMobileServiceTable() throws ExecutionException, InterruptedException
     {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        Bundle bundle = getIntent().getExtras();
+        String connectionId = bundle.getString("connectionId");
 
-        builder.setMessage(message);
-        builder.setTitle(title);
-        builder.create().show();
+        List<ToDoItem> userPhotos = mToDoTable.where().field("userId").eq(val(connectionId)).execute().get();
+
+        uToDoTable = mClient.getTable(User.class);
+        List<User> users = uToDoTable.where().field("id").eq(val(connectionId)).execute().get();
+
+        if(users.get(0).getUsername() == null)
+        {
+            user.setText("" + connectionId);
+            String shortDate = users.get(0).getDate();
+            shortDate = shortDate.substring(0, 10);
+            date.setText(shortDate);
+        }
+        else
+        {
+            user.setText("" + users.get(0).getUsername());
+            String shortDate = users.get(0).getDate();
+            shortDate = shortDate.substring(0, 10);
+            date.setText(shortDate);
+        }
+
+        Collections.sort(userPhotos, new Comparator<ToDoItem>()
+        {
+            @Override
+            public int compare(ToDoItem lhs, ToDoItem rhs)
+            {
+                return String.valueOf(rhs.getDate()).compareTo(lhs.getDate());
+            }
+        });
+
+        return userPhotos;
     }
 
     private AsyncTask<Void, Void, Void> runAsyncTask(AsyncTask<Void, Void, Void> task)
@@ -307,7 +279,8 @@ public class UserPhotoActivity extends ActionBarActivity
                         @Override
                         public void run()
                         {
-                            if (mProgressBar != null) mProgressBar.setVisibility(ProgressBar.GONE);
+                            if (mProgressBar != null)
+                                mProgressBar.setVisibility(ProgressBar.GONE);
                         }
                     });
 
@@ -320,7 +293,28 @@ public class UserPhotoActivity extends ActionBarActivity
     }
 
 
+    //Error Messaging Methods
+    private void createAndShowDialogFromTask(final Exception exception, String title)
+    {
+        createAndShowDialog(exception, "Error");
+    }
 
+    private void createAndShowDialog(Exception exception, String title)
+    {
+        Throwable ex = exception;
+        if (exception.getCause() != null)
+        {
+            ex = exception.getCause();
+        }
+        createAndShowDialog(ex.getMessage(), title);
+    }
 
+    private void createAndShowDialog(final String message, final String title)
+    {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
+        builder.setMessage(message);
+        builder.setTitle(title);
+        builder.create().show();
+    }
 }

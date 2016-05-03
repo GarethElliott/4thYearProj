@@ -10,7 +10,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.InputType;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -30,9 +32,14 @@ import com.microsoft.windowsazure.mobileservices.http.NextServiceFilterCallback;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilter;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilterRequest;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilterResponse;
+import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.TableOperationCallback;
 
 import java.net.MalformedURLException;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import static com.microsoft.windowsazure.mobileservices.table.query.QueryOperations.val;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -47,15 +54,19 @@ public class MainActivity extends AppCompatActivity
 
     ListView listView;
     ArrayAdapter<String> listAdapter;
-    String fragmentArray[] = {"TAKE PHOTO", "SEARCH USER", "MY PHOTOS", "FOLLOWING" };
+    String fragmentArray[] = {"TAKE PHOTO", "SEARCH USER", "MY PHOTOS", "FOLLOWING", "NEWS FEED" };
     DrawerLayout drawerLayout;
     public String username;
+    public MobileServiceTable<User> uToDoTable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(myToolbar);
+
         mProgressBar = (ProgressBar) findViewById(R.id.firstProgressBar);
         mProgressBar.setVisibility(ProgressBar.GONE);
         listView= (ListView) findViewById(R.id.listview);
@@ -82,6 +93,9 @@ public class MainActivity extends AppCompatActivity
                         break;
                     case 3:
                         fragment = new FragmentFour();
+                        break;
+                    case 4:
+                        fragment = new FragmentFive();
                         break;
                     default:
                         fragment = new FragmentOne();
@@ -130,7 +144,11 @@ public class MainActivity extends AppCompatActivity
                         if (exception == null)
                         {
                             cacheUserToken(mClient.getCurrentUser());
-                            setUserName();
+                            try {
+                                setUserName();
+                            } catch (ExecutionException | InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
                         else
                         {
@@ -152,12 +170,28 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    public void testNewUser() throws ExecutionException, InterruptedException
+    {
+        String userId = mClient.getCurrentUser().getUserId();
 
+        uToDoTable = mClient.getTable(User.class);
+        List<User> users = uToDoTable.where().field("userId").eq(val(userId)).execute().get();
+        System.out.println("User size" + users.size());
+        if(users.size() == 0)
+        {
+            setUserName();
+        }
+        else
+        {
+            System.out.println("Returning user");
+        }
+    }
 
-    private void setUserName()
+    public void setUserName() throws ExecutionException, InterruptedException
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Please enter a username");
+        builder.setTitle("If a new user give a username and click OK or click SKIP");
+
 
         // Set up the input
         final EditText input = new EditText(this);
@@ -171,12 +205,12 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(DialogInterface dialog, int which)
             {
-                SharedPreferences prefs = getSharedPreferences(SHAREDPREFFILE, Context.MODE_PRIVATE);
-                String userId = prefs.getString(USERIDPREF, "undefined");
+                String userId = mClient.getCurrentUser().getUserId();
                 username = input.getText().toString();
                 User user = new User(userId, username);
                 user.setUsername(username);
                 user.setId(userId);
+                user.setUserId(userId);
                 mClient.getTable(User.class).insert(user, new TableOperationCallback<User>()
                 {
                     public void onCompleted(User entity, Exception exception, ServiceFilterResponse response)
@@ -189,6 +223,14 @@ public class MainActivity extends AppCompatActivity
                         }
                     }
                 });
+            }
+        });
+
+        builder.setNegativeButton("SKIP", new DialogInterface.OnClickListener()
+        {
+            public void onClick(DialogInterface dialog, int which)
+            {
+                dialog.cancel();
             }
         });
 
@@ -292,6 +334,23 @@ public class MainActivity extends AppCompatActivity
             });
 
             return resultFuture;
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch (item.getItemId())
+        {
+            case R.id.action_settings:
+                // User chose the "Settings" item, show the app settings UI...
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
         }
     }
 }

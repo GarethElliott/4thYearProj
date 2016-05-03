@@ -7,13 +7,16 @@ public class ToDoItem
     private String mText; //Item text
 
     @com.google.gson.annotations.SerializedName("__deleted")
-    private String mDeleted; //Item deleted
+    private Boolean mDeleted; //Item deleted
 
     @com.google.gson.annotations.SerializedName("id")
     private String mId; //Item Id
 
     @com.google.gson.annotations.SerializedName("userId")
     private String mUserId; //User Id
+
+    @com.google.gson.annotations.SerializedName("username")
+    private String mUserName; //UserName
 
     @com.google.gson.annotations.SerializedName("complete")
     private boolean mComplete; //Indicates if the item is completed
@@ -81,7 +84,7 @@ public class ToDoItem
         mSasQueryString = SasQueryString; //Sets the item SasQueryString
     }
 
-    public ToDoItem(String text, String id, String containerName, String resourceName, String imageUri, String sasQueryString, String date, String userId, String deleted)
+    public ToDoItem(String text, String id, String containerName, String resourceName, String imageUri, String sasQueryString, String date, String userId, Boolean deleted)
     {
         this.setText(text);
         this.setId(id);
@@ -135,12 +138,12 @@ public class ToDoItem
         mDate = date;
     }
 
-    public String getDeleted()
+    public Boolean getDeleted()
     {
         return mDeleted;
     }
 
-    public final void setDeleted(String deleted)
+    public final void setDeleted(Boolean deleted)
     {
         mDeleted = deleted;
     }
@@ -153,6 +156,16 @@ public class ToDoItem
     public final void setUserId(String userId)
     {
         mUserId = userId;
+    }
+
+    public String getUserName()
+    {
+        return mUserName;
+    }
+
+    public final void setUserName(String userName)
+    {
+        mUserName = userName;
     }
 
     @Override

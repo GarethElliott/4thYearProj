@@ -14,6 +14,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -87,7 +88,16 @@ public class FragmentTwo extends Fragment
             @Override
             public void onClick(View v)
             {
-                createTable();
+
+                if(searchBar.getText().toString().equals(""))
+                {
+                    Toast.makeText(getContext(), "No Username Entered", Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    createTable();
+                }
+
             }
         });
 
@@ -212,6 +222,7 @@ public class FragmentTwo extends Fragment
     {
         uToDoTable = mClient.getTable(User.class);
         String searchName = searchBar.getText().toString();
+
         List<User> users = uToDoTable.where().field("username").eq(val(searchName)).execute().get();
 
         return users;
