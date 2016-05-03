@@ -70,7 +70,7 @@
             android:rowCount="1"
             android:layout_weight="0.18"
             android:layout_gravity="center"
-            android:background="@drawable/rounded_corner">
+            android:background="@drawable/square_corner">
             <ImageView
                 android:id="@+id/takeBtn"
                 android:layout_width="wrap_content"
@@ -78,7 +78,7 @@
                 android:layout_row="0"
                 android:layout_column="0"
                 android:padding="5dp"
-                android:background="@drawable/camerabuttonimg"/>
+                android:background="@drawable/cambtn"/>
             <ImageView
                 android:id="@+id/saveBtn"
                 android:layout_width="wrap_content"
