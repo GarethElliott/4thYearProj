@@ -12,7 +12,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="@drawable/bg">
+        android:background="@drawable/bg"
+        android:paddingTop="60dp">
 
         <GridLayout
             android:layout_width="match_parent"

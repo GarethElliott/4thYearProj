@@ -4,7 +4,8 @@
     android:id="@+id/drawerlayout"
     android:layout_alignParentTop="true"
     android:layout_centerHorizontal="true"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
 
     <RelativeLayout
@@ -16,11 +17,22 @@
         android:background="@drawable/bg"
         android:scaleType = "centerCrop"
         android:weightSum="1">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/my_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:elevation="4dp"
+            android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+
         <ProgressBar
             android:id="@+id/firstProgressBar"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:visibility="invisible"/>
+            android:visibility="invisible"
+            android:paddingTop="60dp"/>
     </RelativeLayout>
 
     <ListView
@@ -28,7 +40,8 @@
         android:layout_width="150dp"
         android:layout_gravity="left"
         android:id="@+id/listview"
-        android:background="#ff2effff">
+        android:background="#fdfefffe"
+        android:paddingTop="60dp">
     </ListView>
 
 </android.support.v4.widget.DrawerLayout>

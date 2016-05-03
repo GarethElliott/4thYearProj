@@ -1,72 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg">
 
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/my_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/LinLayout3"
+        android:id="@+id/userLin"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="@drawable/bg">
-
-        <GridLayout
-            android:layout_width="wrap_content"
-            android:layout_height="150dp"
-            android:layout_gravity="center"
-            android:rowCount="1"
-            android:columnCount="2">
-            <GridLayout
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:rowCount="2"
-                android:columnCount="1"
-                android:layout_row="0"
-                android:layout_column="0">
-                <TextView
-                    android:id="@+id/nameTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_row="0"
-                    android:layout_column="0" />
-                <TextView
-                    android:text="Member since: 04/04/16"
-                    android:id="@+id/dateTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_row="1"
-                    android:layout_column="0" />
-            </GridLayout>
-
-            <ImageView
-                android:id="@+id/profileImageView"
-                android:layout_width="150dp"
-                android:layout_height="match_parent"
-                android:layout_row="0"
-                android:layout_column="1"
-                android:layout_gravity="center|right"
-                android:background="@drawable/propic"/>
-
-        </GridLayout>
+        android:background="@drawable/bg"
+        android:paddingTop="60dp">
 
         <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:rowCount="2"
+            android:columnCount="1"
+            android:paddingBottom="5dp"
+            android:paddingTop="5dp"
+            android:background="@drawable/rounded_corner">
+            <TextView
+                android:id="@+id/nameTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="25sp"
+                android:textColor="#ffffff"
+                android:layout_gravity="center"
+                android:layout_row="0"
+                android:layout_column="0" />
+            <TextView
+                android:id="@+id/dateTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="15sp"
+                android:textColor="#ffffff"
+                android:layout_gravity="center"
+                android:layout_row="1"
+                android:layout_column="0" />
+        </GridLayout>
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="0.18"
+            android:paddingTop="5dp"
             android:rowCount="2"
             android:columnCount="1">
 
             <ProgressBar
                 android:id="@+id/loadingProgressBar"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_row="0"
-                android:layout_column="0"/>
+                android:layout_column="0"
+                android:layout_gravity="center_horizontal" />
 
             <ListView
                 android:id="@+id/listView"
@@ -74,10 +75,9 @@
                 android:layout_height="match_parent"
                 android:layout_row="1"
                 android:layout_column="0"
-                tools:listitem="@layout/row_list_to_view">
+                tools:listitem="@layout/row_list_user_photo">
             </ListView>
 
         </GridLayout>
     </LinearLayout>
-
 </RelativeLayout>

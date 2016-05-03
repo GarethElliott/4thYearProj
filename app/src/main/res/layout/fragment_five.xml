@@ -8,7 +8,7 @@
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/LinLayout2"
+        android:id="@+id/LinLayout3"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
@@ -19,62 +19,28 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:rowCount="2"
-            android:columnCount="1">
-
+            android:rowCount="1"
+            android:columnCount="1"
+            android:paddingBottom="5dp"
+            android:paddingTop="5dp"
+            android:background="@drawable/rounded_corner">
             <TextView
+                android:id="@+id/newsTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/enterName"
-                android:text="@string/enterName_text"
+                android:text="@string/newsfeed_text"
                 android:textSize="25sp"
                 android:textColor="#ffffff"
                 android:layout_gravity="center"
                 android:layout_row="0"
                 android:layout_column="0" />
-
-            <GridLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:rowCount="1"
-                android:columnCount="2"
-                android:layout_row="1"
-                android:layout_column="0">
-
-                <EditText
-                    android:layout_width="175dp"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/search_bar"
-                    android:layout_row="0"
-                    android:layout_column="0"
-                    android:inputType="text"
-                    android:textColor="#ffffff"
-                    android:textSize="20sp"
-                    android:layout_gravity="center"/>
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:id="@+id/searchBtn"
-                    android:background="@drawable/searchimg"
-                    android:layout_row="0"
-                    android:layout_column="1" />
-            </GridLayout>
         </GridLayout>
-
-
-
-
-
-
-
-
-
 
         <GridLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_weight="0.18"
+            android:paddingTop="5dp"
             android:rowCount="2"
             android:columnCount="1">
 
@@ -92,7 +58,7 @@
                 android:layout_height="match_parent"
                 android:layout_row="1"
                 android:layout_column="0"
-                tools:listitem="@layout/row_list_user">
+                tools:listitem="@layout/row_list_news_feed">
             </ListView>
 
         </GridLayout>
